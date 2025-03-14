@@ -10,6 +10,14 @@ class LabelProject extends Model
 {
     use HasUuids;
 
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
+    public $timestamps = false;
+
+    protected $primaryKey = 'id';
+
     protected $fillable = ['slug', 'name'];
 
     /** Relasi Many-to-Many dengan Project */

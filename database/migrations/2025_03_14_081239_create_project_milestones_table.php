@@ -16,6 +16,8 @@ return new class extends Migration
             $table->uuid('project_id');
             $table->string('title');
             $table->longText('description');
+            $table->date('start_date')->nullable();
+            $table->date('due_date')->nullable();
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->timestamps();
         });

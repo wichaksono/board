@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class LabelProjectResource extends Resource
 {
@@ -27,10 +28,12 @@ class LabelProjectResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('slug')
-                    ->required()
-                    ->maxLength(255),
                 Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255)
+                    ->columnSpan(fn($context) => $context === 'create' ? 2 : 1),
+                Forms\Components\TextInput::make('slug')
+                    ->hidden(fn($context) => $context === 'create')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -40,12 +43,9 @@ class LabelProjectResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
             ])
             ->filters([

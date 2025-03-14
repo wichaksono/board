@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Forms\Components\ColorInputField;
 use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
@@ -10,8 +11,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Model;
 
 class ProjectResource extends Resource
 {
@@ -25,22 +25,118 @@ class ProjectResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('title')
                     ->required()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('description')
-                    ->required()
+                    ->maxLength(255)
                     ->columnSpanFull(),
-                Forms\Components\Textarea::make('priorities')
-                    ->required()
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('boards')
-                    ->required()
-                    ->columnSpanFull(),
-                Forms\Components\Select::make('user_id')
+
+                Forms\Components\Select::make('customer_id')
+                    ->label('Customer')
+                    ->relationship('customer', 'name')
+                    ->nullable()
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('pm_id')
+                    ->label('Project Manager')
                     ->relationship('user', 'name')
-                    ->required(),
-                Forms\Components\TextInput::make('pm_id')
                     ->required()
-                    ->numeric(),
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\RichEditor::make('description')
+                    ->toolbarButtons([
+                        'attachFiles',
+                        'blockquote',
+                        'bold',
+                        'bulletList',
+                        'codeBlock',
+                        'h2',
+                        'h3',
+                        'italic',
+                        'link',
+                        'orderedList',
+                        'redo',
+                        'strike',
+                        'underline',
+                        'undo',
+                    ])
+                    ->disableGrammarly()
+                    ->columnSpanFull(),
+                Forms\Components\FileUpload::make('attachments')
+                    ->multiple()
+                    ->reorderable()
+                    ->appendFiles()
+                    ->downloadable()
+                    ->directory('projects/' . date('Y/m'))
+                    ->columnSpanFull(),
+
+                Forms\Components\Section::make('Board')
+                    ->hidden(fn($context) => $context === 'create')
+                    ->schema([
+                        Forms\Components\Repeater::make('boards')
+                            ->required()
+                            ->hiddenLabel()
+                            ->simple(Forms\Components\TextInput::make('board')
+                                ->required()
+                                ->maxLength(255))
+                            ->reorderable()
+                            ->addActionLabel('Add Board'),
+                    ])->columnSpan(1),
+
+                Forms\Components\Section::make('Priorities')
+                    ->hidden(fn($context) => $context === 'create')
+                    ->schema([
+                        Forms\Components\Repeater::make('priorities')
+                            ->hiddenLabel()
+                            ->required()
+                            ->simple(Forms\Components\TextInput::make('priority')
+                                ->required()
+                                ->maxLength(255))
+                            ->reorderable()
+                            ->addActionLabel('Add Priority'),
+                    ])->columnSpan(1),
+
+                Forms\Components\Section::make('Milestones')
+                    ->schema([
+                        Forms\Components\Repeater::make('milestones')
+                            ->hiddenLabel()
+                            ->columns()
+                            ->schema([
+                                Forms\Components\TextInput::make('title')
+                                    ->required()
+                                    ->live(onBlur: true)
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+                                Forms\Components\Datepicker::make('start_date')
+                                    ->required(),
+
+                                Forms\Components\Datepicker::make('due_date')
+                                    ->required(),
+
+                                Forms\Components\RichEditor::make('description')
+                                    ->toolbarButtons([
+                                        'attachFiles',
+                                        'blockquote',
+                                        'bold',
+                                        'bulletList',
+                                        'codeBlock',
+                                        'h2',
+                                        'h3',
+                                        'italic',
+                                        'link',
+                                        'orderedList',
+                                        'redo',
+                                        'strike',
+                                        'underline',
+                                        'undo',
+                                    ])
+                                    ->disableGrammarly()
+                                    ->columnSpanFull(),
+                            ])
+                            ->addActionLabel('Add Milestone')
+                            ->reorderable()
+                            ->itemLabel(fn(array $state): ?string => $state['title'] ?? null)
+                            ->columnSpanFull(),
+                    ])
             ]);
     }
 
@@ -48,17 +144,18 @@ class ProjectResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('projectManager.name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('pm_id')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Creator')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -72,13 +169,24 @@ class ProjectResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->deferLoading()
+           /* ->recordClasses(fn (Model $record) => match ($record->status) {
+                'draft' => 'opacity-30',
+                'reviewing' => 'border-s-2 border-orange-600 dark:border-orange-300',
+                'published' => 'border-s-2 border-green-600 dark:border-green-300',
+                default => null,
+            })*/;
     }
 
     public static function getRelations(): array
@@ -91,9 +199,10 @@ class ProjectResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProjects::route('/'),
+            'index'  => Pages\ListProjects::route('/'),
             'create' => Pages\CreateProject::route('/create'),
-            'edit' => Pages\EditProject::route('/{record}/edit'),
+            'edit'   => Pages\EditProject::route('/{record}/edit'),
+            'view'   => Pages\ViewProject::route('/{record}'),
         ];
     }
 }
