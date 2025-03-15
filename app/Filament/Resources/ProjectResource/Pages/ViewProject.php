@@ -13,11 +13,12 @@ class ViewProject extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-          Actions\EditAction::make(),
             Actions\Action::make('board')
                 ->label('View Board')
                 ->url(fn() => self::$resource::getUrl('board', ['record' => $this->record]))
                 ->openUrlInNewTab(),
+            Actions\EditAction::make(),
+
         ];
     }
 }

@@ -10,6 +10,7 @@
         "filament/filament": "^3.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "mokhosh/filament-kanban": "^2.10",
         "spatie/eloquent-sortable": "^4.4"
     },
     "require-dev": {

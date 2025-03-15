@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
 
-class ProjectTask extends Model
+class ProjectTask extends Model implements Sortable
 {
-    use HasUuids;
+    use HasUuids, SortableTrait;
 
     protected $fillable = [
         'project_id',
