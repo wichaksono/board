@@ -23,6 +23,8 @@ class ProjectLabelTaskResource extends Resource
 
     protected static ?string $navigationParentItem = 'Tasks';
 
+    protected static ?string $slug = 'task-labels';
+
     public static function form(Form $form): Form
     {
         return $form

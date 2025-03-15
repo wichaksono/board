@@ -3,16 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\LabelProjectResource\Pages;
-use App\Filament\Resources\LabelProjectResource\RelationManagers;
 use App\Models\LabelProject;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Str;
 
 class LabelProjectResource extends Resource
 {
@@ -23,6 +19,8 @@ class LabelProjectResource extends Resource
     protected static ?string $label = 'Label';
 
     protected static ?string $navigationParentItem = 'Projects';
+
+    protected static ?string $slug = 'project-labels';
 
     public static function form(Form $form): Form
     {

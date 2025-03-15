@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,12 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProjectTask extends Model
 {
-    use HasFactory, HasUuids;
+    use HasUuids;
 
     protected $fillable = [
         'project_id',
         'title',
         'description',
+        'status',
+        'order_column',
+        'priority',
         'start_date',
         'due_date',
         'milestone_id',
@@ -25,7 +27,7 @@ class ProjectTask extends Model
 
     protected $casts = [
         'start_date' => 'date',
-        'due_date' => 'date',
+        'due_date'   => 'date',
     ];
 
     /** Relasi ke proyek */

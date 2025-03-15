@@ -13,7 +13,9 @@ class ProjectMilestone extends Model
     protected $fillable = [
         'project_id',
         'title',
-        'description'
+        'description',
+        'start_date',
+        'due_date'
     ];
 
     public function project(): BelongsTo

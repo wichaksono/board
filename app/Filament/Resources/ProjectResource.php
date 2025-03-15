@@ -98,6 +98,7 @@ class ProjectResource extends Resource
                 Forms\Components\Section::make('Milestones')
                     ->schema([
                         Forms\Components\Repeater::make('milestones')
+                            ->relationship()
                             ->hiddenLabel()
                             ->columns()
                             ->schema([
@@ -203,6 +204,7 @@ class ProjectResource extends Resource
             'create' => Pages\CreateProject::route('/create'),
             'edit'   => Pages\EditProject::route('/{record}/edit'),
             'view'   => Pages\ViewProject::route('/{record}'),
+            'board'  => Pages\ProjectBoard::route('/{record}/board'),
         ];
     }
 }

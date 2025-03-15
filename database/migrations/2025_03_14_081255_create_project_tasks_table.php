@@ -19,6 +19,9 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('due_date')->nullable();
             $table->uuid('milestone_id')->nullable();
+            $table->text('status')->nullable();
+            $table->integer('order_column')->default(0);
+            $table->text('priority')->nullable();
             $table->foreignId('user_id');
 
             $table->timestamps();
@@ -26,6 +29,13 @@ return new class extends Migration
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->foreign('milestone_id')->references('id')->on('project_milestones')->onDelete('cascade');
 
+            $table->index('start_date');
+            $table->index('due_date');
+            $table->index(['start_date', 'due_date']);
+
+            $table->index('status');
+            $table->index('order_column');
+            $table->index('priority');
         });
     }
 
