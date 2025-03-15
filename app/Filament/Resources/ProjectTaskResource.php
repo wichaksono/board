@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
 use function array_combine;
@@ -82,12 +83,21 @@ class ProjectTaskResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Group::make('project.title')
+                    ->label('Project'),
+                Group::make('status')
+                    ->label('Status'),
+            ])
+            ->defaultGroup('project.title')
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')
+                    ->limit(50)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
+                    ->badge()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('start_date')
                     ->date()
@@ -110,7 +120,16 @@ class ProjectTaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->options(function () {
+                        $project = self::$project;
+
+                        if ($project && $project->boards) {
+                            return array_combine($project->boards, $project->boards);
+                        }
+
+                        return array_combine(Project::DEFAULT_BOARDS, Project::DEFAULT_BOARDS);
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
